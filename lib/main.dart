@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 void main() => runApp(MyApp());
@@ -45,7 +46,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             TableCalendar(
-              initialCalendarFormat: CalendarFormat.week,
+              initialCalendarFormat: CalendarFormat.month,
               calendarStyle: CalendarStyle(
                 todayColor: Colors.teal,
                 selectedColor: Colors.deepPurpleAccent,
@@ -61,6 +62,16 @@ class _HomePageState extends State<HomePage> {
                 )
               ),
               calendarController: _controller,
+//              We can also change the headers of the calendar
+              headerStyle: HeaderStyle(
+                centerHeaderTitle: true,
+                formatButtonDecoration: BoxDecoration(
+                  color: Colors.teal.shade800,
+                ),
+                formatButtonPadding: EdgeInsets.all(12.0),
+                formatButtonShowsNext: false,
+              ),
+              startingDayOfWeek: StartingDayOfWeek.saturday,
             )
           ],
         ),
