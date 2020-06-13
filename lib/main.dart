@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 void main() => runApp(MyApp());
 
@@ -10,6 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'My Calendar',
+      color: Colors.teal.shade800,
       theme: ThemeData(
         brightness: Brightness.dark,
       ),
@@ -25,13 +27,47 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   CalendarController _controller;
+  TextEditingController _eventController;
+  Map<DateTime, List<dynamic>> _events;
+  List<dynamic> _selectedEvents;
+  SharedPreferences prefs;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _controller = CalendarController();
+    _eventController = TextEditingController();
+    _events = {};
+    _selectedEvents = [];
+    initPrefs();
   }
+
+  initPrefs() async{
+//    loading events from shared preferences
+    prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _events = Map<DateTime, List<dynamic>>.from(decodeMap(json.decode(prefs.getString("events") ?? {})));
+    });
+  }
+
+//  Writing helper functions to encode and decode events
+
+  Map<String, dynamic> encodeMap(Map<DateTime, dynamic> map) {
+    Map<String, dynamic> newMap = {};
+    map.forEach((key, value) {
+      newMap[key.toString()] = map[key];
+    });
+    return newMap;
+  }
+
+  Map<DateTime, dynamic> decodeMap(Map<String, dynamic> map) {
+    Map<DateTime, dynamic> newMap = {};
+    map.forEach((key, value) {
+      newMap[DateTime.parse(key)] = map[key];
+    });
+    return newMap;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,19 +83,17 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             TableCalendar(
+              events: _events,
               initialCalendarFormat: CalendarFormat.month,
               calendarStyle: CalendarStyle(
-                todayColor: Colors.teal,
-                selectedColor: Colors.deepPurpleAccent,
                 selectedStyle: TextStyle(
                   fontSize: 18.0,
                   fontWeight: FontWeight.bold,
                 ),
                 todayStyle: TextStyle(fontWeight: FontWeight.bold),
                 weekendStyle: TextStyle(
-                  color: Colors.deepPurpleAccent,
                   fontStyle: FontStyle.italic,
-                  fontSize: 14.0,
+                  fontSize: 13.0,
                 )
               ),
               calendarController: _controller,
@@ -75,7 +109,9 @@ class _HomePageState extends State<HomePage> {
               startingDayOfWeek: StartingDayOfWeek.monday,
 //              Deciding actions to occur when a date os selected
               onDaySelected: (date, events){
-                print(date.toIso8601String());
+                setState(() {
+                  _selectedEvents = events;
+                });
               },
 //              We can provide more customisations using builders
               builders: CalendarBuilders(
@@ -110,9 +146,51 @@ class _HomePageState extends State<HomePage> {
                   ),
                 )
               ),
-            )
+            ),
+            ..._selectedEvents.map((event) => ListTile(
+              title: Text(event),
+            )),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add, color: Colors.white,),
+        onPressed: _showAddDialog,
+        backgroundColor: Colors.deepPurpleAccent,
+      ),
+    );
+  }
+  _showAddDialog(){
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: TextField(
+          controller: _eventController,
+        ),
+        actions: <Widget>[
+          FlatButton(
+            child: Text(
+              'Save',
+            ),
+            onPressed: (){
+              if(_eventController.text.isEmpty)
+                return;
+              setState(() {
+                if(_events[_controller.selectedDay] != null) {
+                  _events[_controller.selectedDay].add(
+                    _eventController.text
+                  );
+                }
+                else{
+                  _events[_controller.selectedDay] = [_eventController.text];
+                }
+                prefs.setString("events", json.encode(encodeMap(_events)));
+                _eventController.clear();
+                Navigator.pop(context);
+              });
+            },
+          )
+        ],
       ),
     );
   }
