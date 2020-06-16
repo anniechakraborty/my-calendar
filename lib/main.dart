@@ -94,6 +94,7 @@ class _HomePageState extends State<HomePage> {
                 weekendStyle: TextStyle(
                   fontStyle: FontStyle.italic,
                   fontSize: 13.0,
+                  color: Colors.pinkAccent,
                 )
               ),
               calendarController: _controller,
@@ -106,7 +107,7 @@ class _HomePageState extends State<HomePage> {
                 formatButtonPadding: EdgeInsets.all(12.0),
                 formatButtonShowsNext: false,
               ),
-              startingDayOfWeek: StartingDayOfWeek.monday,
+              startingDayOfWeek: StartingDayOfWeek.sunday,
 //              Deciding actions to occur when a date os selected
               onDaySelected: (date, events){
                 setState(() {
@@ -150,6 +151,20 @@ class _HomePageState extends State<HomePage> {
             ..._selectedEvents.map((event) => ListTile(
               title: Text(event),
             )),
+            Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(28.0),
+                  child: Container(
+                    margin: EdgeInsets.fromLTRB(20.0, 50.0, 20.0, 20.0),
+                    child: Text(
+                      'App by Annie Chakraborty',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+            ))
           ],
         ),
       ),
@@ -164,6 +179,7 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        title: Text('Save an event for the day'),
         content: TextField(
           controller: _eventController,
         ),
